@@ -1,0 +1,270 @@
+<?php
+
+/**
+ * @file
+ * ATmosphere module: Publish Drupal content to AT Protocol.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_entity_base_field_info().
+ *
+ * Adds hidden base fields to node entities for AT Protocol metadata.
+ */
+function atmosphere_entity_base_field_info(EntityTypeInterface $entity_type): array {
+  $fields = [];
+
+  if ($entity_type->id() === 'node') {
+    $field_names = [
+      'atmosphere_bsky_tid' => 'Bluesky TID',
+      'atmosphere_bsky_uri' => 'Bluesky AT-URI',
+      'atmosphere_bsky_cid' => 'Bluesky CID',
+      'atmosphere_doc_tid' => 'Document TID',
+      'atmosphere_doc_uri' => 'Document AT-URI',
+      'atmosphere_doc_cid' => 'Document CID',
+    ];
+
+    foreach ($field_names as $field_name => $label) {
+      $fields[$field_name] = BaseFieldDefinition::create('string')
+        ->setLabel(t('ATmosphere: @label', ['@label' => $label]))
+        ->setDescription(t('AT Protocol metadata managed by the ATmosphere module.'))
+        ->setRevisionable(FALSE)
+        ->setTranslatable(FALSE)
+        ->setDisplayConfigurable('form', FALSE)
+        ->setDisplayConfigurable('view', FALSE);
+    }
+  }
+
+  return $fields;
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function atmosphere_entity_insert(EntityInterface $entity): void {
+  if (!$entity instanceof NodeInterface) {
+    return;
+  }
+
+  if (\Drupal\atmosphere\Service\Publisher::$isSaving) {
+    return;
+  }
+
+  $config = \Drupal::config('atmosphere.settings');
+  $connection_manager = \Drupal::service('atmosphere.connection_manager');
+
+  if (!$connection_manager->isConnected()) {
+    return;
+  }
+
+  if (!$config->get('auto_publish')) {
+    return;
+  }
+
+  $syncable_types = $config->get('syncable_node_types') ?? [];
+  if (!in_array($entity->bundle(), $syncable_types, TRUE)) {
+    return;
+  }
+
+  if (!$entity->isPublished()) {
+    return;
+  }
+
+  \Drupal::queue('atmosphere_publish')->createItem([
+    'nid' => $entity->id(),
+  ]);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function atmosphere_entity_update(EntityInterface $entity): void {
+  if (!$entity instanceof NodeInterface) {
+    return;
+  }
+
+  if (\Drupal\atmosphere\Service\Publisher::$isSaving) {
+    return;
+  }
+
+  $config = \Drupal::config('atmosphere.settings');
+  $connection_manager = \Drupal::service('atmosphere.connection_manager');
+
+  if (!$connection_manager->isConnected()) {
+    return;
+  }
+
+  $syncable_types = $config->get('syncable_node_types') ?? [];
+  if (!in_array($entity->bundle(), $syncable_types, TRUE)) {
+    return;
+  }
+
+  $was_published = isset($entity->original) && $entity->original->isPublished();
+  $is_published = $entity->isPublished();
+
+  if ($is_published && !$was_published) {
+    // Newly published.
+    \Drupal::queue('atmosphere_publish')->createItem([
+      'nid' => $entity->id(),
+    ]);
+  }
+  elseif ($is_published && $was_published) {
+    // Updated while published.
+    \Drupal::queue('atmosphere_update')->createItem([
+      'nid' => $entity->id(),
+    ]);
+  }
+  elseif (!$is_published && $was_published) {
+    // Unpublished — delete from AT Protocol.
+    $bsky_tid = $entity->get('atmosphere_bsky_tid')->value;
+    $doc_tid = $entity->get('atmosphere_doc_tid')->value;
+    if ($bsky_tid || $doc_tid) {
+      \Drupal::queue('atmosphere_delete')->createItem([
+        'nid' => $entity->id(),
+        'bsky_tid' => $bsky_tid,
+        'doc_tid' => $doc_tid,
+      ]);
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_predelete().
+ */
+function atmosphere_entity_predelete(EntityInterface $entity): void {
+  if (!$entity instanceof NodeInterface) {
+    return;
+  }
+
+  $connection_manager = \Drupal::service('atmosphere.connection_manager');
+  if (!$connection_manager->isConnected()) {
+    return;
+  }
+
+  $bsky_tid = $entity->get('atmosphere_bsky_tid')->value;
+  $doc_tid = $entity->get('atmosphere_doc_tid')->value;
+
+  if ($bsky_tid || $doc_tid) {
+    \Drupal::queue('atmosphere_delete')->createItem([
+      'bsky_tid' => $bsky_tid,
+      'doc_tid' => $doc_tid,
+    ]);
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() for node forms.
+ */
+function atmosphere_form_node_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  $node = $form_state->getFormObject()->getEntity();
+  $config = \Drupal::config('atmosphere.settings');
+  $syncable_types = $config->get('syncable_node_types') ?? [];
+
+  if (!in_array($node->bundle(), $syncable_types, TRUE)) {
+    return;
+  }
+
+  $connection_manager = \Drupal::service('atmosphere.connection_manager');
+  if (!$connection_manager->isConnected()) {
+    return;
+  }
+
+  $doc_uri = $node->get('atmosphere_doc_uri')->value ?? '';
+  $bsky_uri = $node->get('atmosphere_bsky_uri')->value ?? '';
+
+  $form['atmosphere'] = [
+    '#type' => 'details',
+    '#title' => t('ATmosphere'),
+    '#group' => 'advanced',
+    '#weight' => 100,
+    '#open' => FALSE,
+  ];
+
+  if ($doc_uri) {
+    $form['atmosphere']['status'] = [
+      '#markup' => '<p>' . t('Published to AT Protocol.') . '</p>',
+    ];
+    $form['atmosphere']['doc_uri'] = [
+      '#markup' => '<p><strong>' . t('Document:') . '</strong> <code>' . $doc_uri . '</code></p>',
+    ];
+    if ($bsky_uri) {
+      $form['atmosphere']['bsky_uri'] = [
+        '#markup' => '<p><strong>' . t('Bluesky:') . '</strong> <code>' . $bsky_uri . '</code></p>',
+      ];
+    }
+  }
+  else {
+    $auto = $config->get('auto_publish') ? t('Yes') : t('No');
+    $form['atmosphere']['status'] = [
+      '#markup' => '<p>' . t('Not yet published to AT Protocol.') . '</p>'
+        . '<p>' . t('Auto-publish enabled: @auto', ['@auto' => $auto]) . '</p>',
+    ];
+  }
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function atmosphere_page_attachments(array &$attachments): void {
+  $route_match = \Drupal::routeMatch();
+
+  if ($route_match->getRouteName() !== 'entity.node.canonical') {
+    return;
+  }
+
+  $node = $route_match->getParameter('node');
+  if (!$node instanceof NodeInterface) {
+    return;
+  }
+
+  $doc_uri = $node->get('atmosphere_doc_uri')->value ?? '';
+  if (empty($doc_uri)) {
+    return;
+  }
+
+  $attachments['#attached']['html_head'][] = [
+    [
+      '#tag' => 'link',
+      '#attributes' => [
+        'rel' => 'site.standard.document',
+        'href' => $doc_uri,
+      ],
+    ],
+    'atmosphere_document_link',
+  ];
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Proactively refreshes the AT Protocol access token if expiring soon.
+ */
+function atmosphere_cron(): void {
+  $connection_manager = \Drupal::service('atmosphere.connection_manager');
+
+  if (!$connection_manager->isConnected()) {
+    return;
+  }
+
+  // Refresh if expiring within 6 hours.
+  $expires_at = $connection_manager->getExpiresAt();
+  if ($expires_at > 0 && $expires_at < (\Drupal::time()->getRequestTime() + 21600)) {
+    try {
+      \Drupal::service('atmosphere.oauth_client')->refresh();
+    }
+    catch (\Exception $e) {
+      \Drupal::logger('atmosphere')->error('Token refresh failed during cron: @message', [
+        '@message' => $e->getMessage(),
+      ]);
+    }
+  }
+}

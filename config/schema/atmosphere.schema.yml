@@ -1,0 +1,19 @@
+atmosphere.settings:
+  type: config_object
+  label: 'ATmosphere settings'
+  mapping:
+    auto_publish:
+      type: boolean
+      label: 'Auto-publish new content'
+    syncable_node_types:
+      type: sequence
+      label: 'Content types to sync'
+      sequence:
+        type: string
+        label: 'Node type machine name'
+    publication_tid:
+      type: string
+      label: 'Publication TID'
+    publication_uri:
+      type: string
+      label: 'Publication AT-URI'

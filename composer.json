@@ -1,0 +1,12 @@
+{
+  "name": "drupal/atmosphere",
+  "description": "Publish Drupal content to AT Protocol (Bluesky + standard.site) via native OAuth.",
+  "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=8.2",
+    "ext-openssl": "*",
+    "ext-sodium": "*",
+    "web-token/jwt-library": "^4.1"
+  }
+}

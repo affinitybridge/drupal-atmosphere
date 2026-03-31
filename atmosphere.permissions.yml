@@ -1,0 +1,8 @@
+administer atmosphere:
+  title: 'Administer ATmosphere'
+  description: 'Connect/disconnect AT Protocol account and configure publishing settings.'
+  restrict access: true
+
+preview atmosphere records:
+  title: 'Preview AT Protocol records'
+  description: 'View the ?atproto JSON preview on node pages.'

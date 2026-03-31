@@ -1,0 +1,27 @@
+/**
+ * @file
+ * ATmosphere admin styles.
+ */
+
+#atmosphere-backfill-progress {
+  margin-top: 1em;
+}
+
+#atmosphere-backfill-progress .progress-bar {
+  background: #e0e0e0;
+  border-radius: 4px;
+  height: 20px;
+  overflow: hidden;
+  margin-bottom: 0.5em;
+}
+
+#atmosphere-backfill-progress .progress-bar__fill {
+  background: #0074bd;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+#atmosphere-backfill-progress .progress-message {
+  font-size: 0.9em;
+  color: #555;
+}

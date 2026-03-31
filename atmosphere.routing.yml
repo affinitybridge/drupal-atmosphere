@@ -1,0 +1,58 @@
+atmosphere.settings:
+  path: '/admin/config/services/atmosphere'
+  defaults:
+    _form: '\Drupal\atmosphere\Form\SettingsForm'
+    _title: 'ATmosphere'
+  requirements:
+    _permission: 'administer atmosphere'
+
+atmosphere.oauth_callback:
+  path: '/admin/config/services/atmosphere/oauth-callback'
+  defaults:
+    _controller: '\Drupal\atmosphere\Controller\OAuthCallbackController::callback'
+  requirements:
+    _permission: 'administer atmosphere'
+
+atmosphere.disconnect:
+  path: '/admin/config/services/atmosphere/disconnect'
+  defaults:
+    _controller: '\Drupal\atmosphere\Controller\OAuthCallbackController::disconnect'
+  requirements:
+    _permission: 'administer atmosphere'
+    _csrf_token: 'TRUE'
+
+atmosphere.client_metadata:
+  path: '/atmosphere/client-metadata'
+  defaults:
+    _controller: '\Drupal\atmosphere\Controller\ClientMetadataController::metadata'
+  requirements:
+    _access: 'TRUE'
+
+atmosphere.wellknown.atproto_did:
+  path: '/.well-known/atproto-did'
+  defaults:
+    _controller: '\Drupal\atmosphere\Controller\WellKnownController::atprotoDid'
+  requirements:
+    _access: 'TRUE'
+
+atmosphere.wellknown.publication:
+  path: '/.well-known/site.standard.publication'
+  defaults:
+    _controller: '\Drupal\atmosphere\Controller\WellKnownController::publication'
+  requirements:
+    _access: 'TRUE'
+
+atmosphere.backfill.count:
+  path: '/admin/config/services/atmosphere/backfill/count'
+  defaults:
+    _controller: '\Drupal\atmosphere\Controller\BackfillController::count'
+  requirements:
+    _permission: 'administer atmosphere'
+
+atmosphere.backfill.batch:
+  path: '/admin/config/services/atmosphere/backfill/batch'
+  defaults:
+    _controller: '\Drupal\atmosphere\Controller\BackfillController::batch'
+  requirements:
+    _permission: 'administer atmosphere'
+  methods: [POST]

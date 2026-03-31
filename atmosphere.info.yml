@@ -1,0 +1,7 @@
+name: ATmosphere
+type: module
+description: 'Publish Drupal content to AT Protocol (Bluesky + standard.site) via native OAuth.'
+package: 'AT Protocol'
+core_version_requirement: ^10.3 || ^11
+php: 8.2
+configure: atmosphere.settings

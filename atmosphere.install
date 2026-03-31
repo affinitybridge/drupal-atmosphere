@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the ATmosphere module.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_install().
+ */
+function atmosphere_install(): void {
+  // Generate a publication TID on install if not already set.
+  $config = \Drupal::configFactory()->getEditable('atmosphere.settings');
+  if (empty($config->get('publication_tid'))) {
+    $tidGenerator = \Drupal::service('atmosphere.tid_generator');
+    $config->set('publication_tid', $tidGenerator->generate())->save();
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function atmosphere_uninstall(): void {
+  // Clear connection state.
+  \Drupal::state()->delete('atmosphere.connection');
+
+  // Clear any queued items.
+  $queues = [
+    'atmosphere_publish',
+    'atmosphere_update',
+    'atmosphere_delete',
+    'atmosphere_sync_publication',
+  ];
+  foreach ($queues as $queueName) {
+    \Drupal::queue($queueName)->deleteQueue();
+  }
+
+  // Clear expirable key-value stores.
+  \Drupal::keyValueExpirable('atmosphere.dpop_nonce')->deleteAll();
+  \Drupal::keyValueExpirable('atmosphere.oauth_transient')->deleteAll();
+}

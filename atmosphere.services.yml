@@ -1,0 +1,99 @@
+services:
+  atmosphere.connection_manager:
+    class: Drupal\atmosphere\Service\ConnectionManager
+    arguments: ['@state', '@keyvalue.expirable']
+
+  atmosphere.encryption:
+    class: Drupal\atmosphere\OAuth\Encryption
+    arguments: ['@settings']
+
+  atmosphere.nonce_storage:
+    class: Drupal\atmosphere\OAuth\NonceStorage
+    arguments: ['@keyvalue.expirable']
+
+  atmosphere.dpop:
+    class: Drupal\atmosphere\OAuth\DPoP
+    arguments: ['@atmosphere.nonce_storage']
+
+  atmosphere.resolver:
+    class: Drupal\atmosphere\OAuth\Resolver
+    arguments: ['@http_client']
+
+  atmosphere.oauth_client:
+    class: Drupal\atmosphere\OAuth\Client
+    arguments:
+      - '@atmosphere.resolver'
+      - '@atmosphere.dpop'
+      - '@atmosphere.encryption'
+      - '@atmosphere.connection_manager'
+      - '@http_client'
+      - '@url_generator'
+
+  atmosphere.api_client:
+    class: Drupal\atmosphere\Service\ApiClient
+    arguments:
+      - '@atmosphere.oauth_client'
+      - '@atmosphere.dpop'
+      - '@atmosphere.encryption'
+      - '@atmosphere.connection_manager'
+      - '@http_client'
+
+  atmosphere.tid_generator:
+    class: Drupal\atmosphere\Transformer\TidGenerator
+
+  atmosphere.facet_extractor:
+    class: Drupal\atmosphere\Transformer\FacetExtractor
+    arguments: ['@atmosphere.connection_manager', '@atmosphere.resolver']
+
+  atmosphere.document_transformer:
+    class: Drupal\atmosphere\Transformer\DocumentTransformer
+    arguments:
+      - '@atmosphere.tid_generator'
+      - '@atmosphere.connection_manager'
+      - '@atmosphere.api_client'
+      - '@config.factory'
+      - '@path_alias.manager'
+      - '@module_handler'
+
+  atmosphere.post_transformer:
+    class: Drupal\atmosphere\Transformer\PostTransformer
+    arguments:
+      - '@atmosphere.tid_generator'
+      - '@atmosphere.facet_extractor'
+      - '@atmosphere.api_client'
+      - '@atmosphere.connection_manager'
+
+  atmosphere.publication_transformer:
+    class: Drupal\atmosphere\Transformer\PublicationTransformer
+    arguments:
+      - '@atmosphere.tid_generator'
+      - '@atmosphere.api_client'
+      - '@config.factory'
+      - '@atmosphere.connection_manager'
+
+  atmosphere.publisher:
+    class: Drupal\atmosphere\Service\Publisher
+    arguments:
+      - '@atmosphere.api_client'
+      - '@atmosphere.connection_manager'
+      - '@atmosphere.document_transformer'
+      - '@atmosphere.post_transformer'
+      - '@atmosphere.publication_transformer'
+      - '@entity_type.manager'
+      - '@config.factory'
+
+  atmosphere.site_config_subscriber:
+    class: Drupal\atmosphere\EventSubscriber\SiteConfigSubscriber
+    arguments: ['@atmosphere.connection_manager', '@queue']
+    tags:
+      - { name: event_subscriber }
+
+  atmosphere.preview_subscriber:
+    class: Drupal\atmosphere\EventSubscriber\PreviewSubscriber
+    arguments:
+      - '@atmosphere.document_transformer'
+      - '@atmosphere.connection_manager'
+      - '@current_user'
+      - '@config.factory'
+    tags:
+      - { name: event_subscriber }

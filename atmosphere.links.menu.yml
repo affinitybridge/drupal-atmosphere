@@ -1,0 +1,5 @@
+atmosphere.settings:
+  title: 'ATmosphere'
+  description: 'Configure AT Protocol publishing to Bluesky and standard.site.'
+  route_name: atmosphere.settings
+  parent: system.admin_config_services
