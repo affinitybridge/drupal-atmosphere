@@ -8,5 +8,18 @@
     "ext-openssl": "*",
     "ext-sodium": "*",
     "web-token/jwt-library": "^4.1"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10 || ^11"
+  },
+  "autoload": {
+    "psr-4": {
+      "Drupal\\atmosphere\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Drupal\\Tests\\atmosphere\\": "tests/src/"
+    }
   }
 }
