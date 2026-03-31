@@ -9,7 +9,7 @@ use Drupal\atmosphere\Service\ConnectionManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Path\PathAliasManagerInterface;
+use Drupal\path_alias\AliasManagerInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\node\NodeInterface;
 
@@ -25,7 +25,7 @@ class DocumentTransformer extends TransformerBase {
     private readonly ConnectionManager $connectionManager,
     private readonly ApiClient $apiClient,
     private readonly ConfigFactoryInterface $configFactory,
-    private readonly PathAliasManagerInterface $pathAliasManager,
+    private readonly AliasManagerInterface $pathAliasManager,
     private readonly ModuleHandlerInterface $moduleHandler,
     private readonly FileSystemInterface $fileSystem,
     private readonly UrlGeneratorInterface $urlGenerator,
