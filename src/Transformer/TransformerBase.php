@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\atmosphere\Transformer;
 
-use Drupal\atmosphere\Service\ConnectionManager;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -14,6 +14,11 @@ use Drupal\node\NodeInterface;
  * generating excerpts, and formatting dates.
  */
 abstract class TransformerBase implements TransformerInterface {
+
+  /**
+   * The language manager, injected by concrete subclasses that need getLangs().
+   */
+  protected ?LanguageManagerInterface $languageManager = NULL;
 
   /**
    * Builds an AT-URI from components.
@@ -26,7 +31,10 @@ abstract class TransformerBase implements TransformerInterface {
    * Returns the current site language as a BCP-47 array.
    */
   protected function getLangs(): array {
-    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    if ($this->languageManager === NULL) {
+      return ['en'];
+    }
+    $langcode = $this->languageManager->getCurrentLanguage()->getId();
     // BCP-47: use just the primary language subtag.
     return [substr($langcode, 0, 2)];
   }
@@ -121,19 +129,27 @@ abstract class TransformerBase implements TransformerInterface {
 
   /**
    * Truncates text at a word boundary, respecting a grapheme limit.
+   *
+   * Uses grapheme_strlen/grapheme_substr when available (intl extension) to
+   * correctly count Unicode grapheme clusters as Bluesky does. Falls back to
+   * mb_strlen/mb_substr if intl is not available.
    */
   protected function truncateText(string $text, int $limit = 300, string $marker = '...'): string {
-    if (mb_strlen($text) <= $limit) {
+    $strlen = function_exists('grapheme_strlen') ? 'grapheme_strlen' : 'mb_strlen';
+    $substr = function_exists('grapheme_substr') ? 'grapheme_substr' : 'mb_substr';
+    $strrpos = 'mb_strrpos';
+
+    if ($strlen($text) <= $limit) {
       return $text;
     }
 
-    $markerLen = mb_strlen($marker);
-    $truncated = mb_substr($text, 0, $limit - $markerLen);
+    $markerLen = $strlen($marker);
+    $truncated = $substr($text, 0, $limit - $markerLen);
 
     // Cut at last space to avoid breaking words.
-    $lastSpace = mb_strrpos($truncated, ' ');
+    $lastSpace = $strrpos($truncated, ' ');
     if ($lastSpace !== FALSE && $lastSpace > ($limit - $markerLen) / 2) {
-      $truncated = mb_substr($truncated, 0, $lastSpace);
+      $truncated = $substr($truncated, 0, $lastSpace);
     }
 
     return $truncated . $marker;

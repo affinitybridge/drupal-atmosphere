@@ -10,8 +10,20 @@ namespace Drupal\atmosphere\Transformer;
  * TIDs are 13-character base-32 encoded identifiers combining a microsecond
  * timestamp (left-shifted 10 bits) with a per-process clock ID. They are
  * monotonically increasing and sortable.
+ *
+ * Requires 64-bit PHP (the left-shift produces values exceeding 32-bit range).
  */
 class TidGenerator {
+
+  /**
+   * @throws \RuntimeException
+   *   If running on 32-bit PHP.
+   */
+  public function __construct() {
+    if (PHP_INT_SIZE < 8) {
+      throw new \RuntimeException('TidGenerator requires 64-bit PHP (PHP_INT_SIZE >= 8).');
+    }
+  }
 
   private const CHARSET = '234567abcdefghijklmnopqrstuvwxyz';
 

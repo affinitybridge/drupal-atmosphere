@@ -10,6 +10,7 @@ use Drupal\atmosphere\Transformer\PublicationTransformer;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\node\NodeInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Orchestrates publishing Drupal nodes to AT Protocol.
@@ -37,6 +38,7 @@ class Publisher {
     private readonly PublicationTransformer $publicationTransformer,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly ConfigFactoryInterface $configFactory,
+    private readonly LoggerInterface $logger,
   ) {}
 
   /**
@@ -93,7 +95,7 @@ class Publisher {
         );
       }
       catch (\Exception $e) {
-        \Drupal::logger('atmosphere')->warning('Failed to update document with bskyPostRef: @message', [
+        $this->logger->warning('Failed to update document with bskyPostRef: @message', [
           '@message' => $e->getMessage(),
         ]);
       }

@@ -7,6 +7,8 @@ namespace Drupal\atmosphere\Transformer;
 use Drupal\atmosphere\Service\ApiClient;
 use Drupal\atmosphere\Service\ConnectionManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 
 /**
  * Transforms Drupal site configuration into a site.standard.publication record.
@@ -20,6 +22,8 @@ class PublicationTransformer extends TransformerBase {
     private readonly ApiClient $apiClient,
     private readonly ConfigFactoryInterface $configFactory,
     private readonly ConnectionManager $connectionManager,
+    private readonly FileSystemInterface $fileSystem,
+    private readonly UrlGeneratorInterface $urlGenerator,
   ) {}
 
   /**
@@ -69,7 +73,7 @@ class PublicationTransformer extends TransformerBase {
 
     $record = [
       '$type' => self::COLLECTION,
-      'url' => $GLOBALS['base_url'] . '/',
+      'url' => $this->urlGenerator->generateFromRoute('<front>', [], ['absolute' => TRUE]),
       'name' => $siteConfig->get('name') ?? 'Drupal Site',
     ];
 
@@ -105,7 +109,7 @@ class PublicationTransformer extends TransformerBase {
       return NULL;
     }
 
-    $realPath = \Drupal::service('file_system')->realpath($logoPath);
+    $realPath = $this->fileSystem->realpath($logoPath);
     if (!$realPath || !file_exists($realPath)) {
       // The logo path might already be absolute or a stream URI.
       if (file_exists($logoPath)) {

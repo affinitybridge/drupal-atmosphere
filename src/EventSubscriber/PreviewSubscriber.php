@@ -72,9 +72,7 @@ class PreviewSubscriber implements EventSubscriberInterface {
 
     $record = $this->documentTransformer->transform($node);
 
-    $event->setResponse(new JsonResponse($record, 200, [
-      'Content-Type' => 'application/json',
-    ], TRUE));
+    $event->setResponse(new JsonResponse($record));
   }
 
 }

@@ -58,16 +58,18 @@ class ApiClient {
       throw new \RuntimeException('Failed to create DPoP proof.');
     }
 
-    $options['headers'] = array_merge($options['headers'] ?? [], [
+    // Inject auth headers fresh each time (never carry stale headers into retry).
+    $requestOptions = $options;
+    $requestOptions['headers'] = array_merge($options['headers'] ?? [], [
       'Authorization' => 'DPoP ' . $accessToken,
       'DPoP' => $dpopProof,
     ]);
 
-    $options['timeout'] = $options['timeout'] ?? 30;
-    $options['http_errors'] = FALSE;
+    $requestOptions['timeout'] = $options['timeout'] ?? 30;
+    $requestOptions['http_errors'] = FALSE;
 
     try {
-      $response = $this->httpClient->request($method, $url, $options);
+      $response = $this->httpClient->request($method, $url, $requestOptions);
     }
     catch (GuzzleException $e) {
       throw new \RuntimeException('PDS request failed: ' . $e->getMessage());
@@ -76,7 +78,8 @@ class ApiClient {
     $statusCode = $response->getStatusCode();
     $body = json_decode((string) $response->getBody(), TRUE) ?? [];
 
-    // Handle DPoP nonce retry (once).
+    // Handle DPoP nonce retry (once). Pass original $options (without auth
+    // headers) so the retry builds fresh DPoP proof and Authorization.
     if ($nonce === NULL && $this->isNonceError($statusCode, $body)) {
       $newNonce = $response->getHeaderLine('DPoP-Nonce');
       if (!empty($newNonce)) {

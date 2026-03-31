@@ -3,7 +3,7 @@
  * ATmosphere backfill functionality.
  */
 
-(function (Drupal, once) {
+(function (Drupal, drupalSettings, once) {
   'use strict';
 
   Drupal.behaviors.atmosphereBackfill = {
@@ -17,6 +17,18 @@
     }
   };
 
+  /**
+   * Builds a URL with the Drupal CSRF session token appended.
+   */
+  function tokenUrl(path) {
+    var url = Drupal.url(path);
+    var token = drupalSettings.atmosphere && drupalSettings.atmosphere.csrfToken;
+    if (token) {
+      url += (url.indexOf('?') === -1 ? '?' : '&') + 'token=' + encodeURIComponent(token);
+    }
+    return url;
+  }
+
   function startBackfill(button) {
     button.disabled = true;
     button.value = Drupal.t('Backfilling...');
@@ -24,7 +36,7 @@
     var progress = document.getElementById('atmosphere-backfill-progress');
     progress.innerHTML = '<div class="progress-message">' + Drupal.t('Counting unsynced content...') + '</div>';
 
-    fetch(Drupal.url('admin/config/services/atmosphere/backfill/count'), {
+    fetch(tokenUrl('admin/config/services/atmosphere/backfill/count'), {
       credentials: 'same-origin',
       headers: {
         'Accept': 'application/json'
@@ -53,16 +65,13 @@
   }
 
   function processBatch(nids, processed, total, progress, button) {
-    var token = document.querySelector('meta[name="csrf-token"]');
-    var headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    };
-
-    fetch(Drupal.url('admin/config/services/atmosphere/backfill/batch'), {
+    fetch(tokenUrl('admin/config/services/atmosphere/backfill/batch'), {
       method: 'POST',
       credentials: 'same-origin',
-      headers: headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: JSON.stringify({ nids: nids })
     })
     .then(function (response) { return response.json(); })
@@ -76,8 +85,7 @@
         Drupal.t('Synced @processed of @total...', {'@processed': processed, '@total': total});
 
       if (processed < total) {
-        // Fetch next batch.
-        fetch(Drupal.url('admin/config/services/atmosphere/backfill/count'), {
+        fetch(tokenUrl('admin/config/services/atmosphere/backfill/count'), {
           credentials: 'same-origin',
           headers: { 'Accept': 'application/json' }
         })
@@ -109,4 +117,4 @@
     button.value = Drupal.t('Start Backfill');
   }
 
-})(Drupal, once);
+})(Drupal, drupalSettings, once);

@@ -5,7 +5,6 @@ services:
 
   atmosphere.encryption:
     class: Drupal\atmosphere\OAuth\Encryption
-    arguments: ['@settings']
 
   atmosphere.nonce_storage:
     class: Drupal\atmosphere\OAuth\NonceStorage
@@ -54,6 +53,8 @@ services:
       - '@config.factory'
       - '@path_alias.manager'
       - '@module_handler'
+      - '@file_system'
+      - '@url_generator'
 
   atmosphere.post_transformer:
     class: Drupal\atmosphere\Transformer\PostTransformer
@@ -62,6 +63,9 @@ services:
       - '@atmosphere.facet_extractor'
       - '@atmosphere.api_client'
       - '@atmosphere.connection_manager'
+      - '@file_system'
+      - '@entity_type.manager'
+      - '@language_manager'
 
   atmosphere.publication_transformer:
     class: Drupal\atmosphere\Transformer\PublicationTransformer
@@ -70,6 +74,8 @@ services:
       - '@atmosphere.api_client'
       - '@config.factory'
       - '@atmosphere.connection_manager'
+      - '@file_system'
+      - '@url_generator'
 
   atmosphere.publisher:
     class: Drupal\atmosphere\Service\Publisher
@@ -81,6 +87,11 @@ services:
       - '@atmosphere.publication_transformer'
       - '@entity_type.manager'
       - '@config.factory'
+      - '@logger.channel.atmosphere'
+
+  logger.channel.atmosphere:
+    parent: logger.channel_base
+    arguments: ['atmosphere']
 
   atmosphere.site_config_subscriber:
     class: Drupal\atmosphere\EventSubscriber\SiteConfigSubscriber

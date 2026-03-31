@@ -43,7 +43,7 @@ class ClientMetadataController extends ControllerBase {
         ['absolute' => TRUE],
       ),
       'client_name' => $siteName . ' (ATmosphere)',
-      'client_uri' => $GLOBALS['base_url'] . '/',
+      'client_uri' => $this->urlGenerator->generateFromRoute('<front>', [], ['absolute' => TRUE]),
       'redirect_uris' => [
         $this->urlGenerator->generateFromRoute(
           'atmosphere.oauth_callback',

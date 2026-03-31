@@ -6,6 +6,7 @@ namespace Drupal\atmosphere\Form;
 
 use Drupal\atmosphere\OAuth\Client;
 use Drupal\atmosphere\Service\ConnectionManager;
+use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -27,6 +28,7 @@ class SettingsForm extends ConfigFormBase {
     private readonly Client $oauthClient,
     private readonly ConnectionManager $connectionManager,
     private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly CsrfTokenGenerator $csrfTokenGenerator,
   ) {
     parent::__construct($config_factory);
   }
@@ -40,6 +42,7 @@ class SettingsForm extends ConfigFormBase {
       $container->get('atmosphere.oauth_client'),
       $container->get('atmosphere.connection_manager'),
       $container->get('entity_type.manager'),
+      $container->get('csrf_token'),
     );
   }
 
@@ -150,6 +153,9 @@ class SettingsForm extends ConfigFormBase {
     ];
 
     $form['#attached']['library'][] = 'atmosphere/admin';
+    $form['#attached']['drupalSettings']['atmosphere'] = [
+      'csrfToken' => $this->csrfTokenGenerator->get('session'),
+    ];
 
     return $form;
   }

@@ -6,6 +6,9 @@ namespace Drupal\atmosphere\Transformer;
 
 use Drupal\atmosphere\Service\ApiClient;
 use Drupal\atmosphere\Service\ConnectionManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -22,7 +25,12 @@ class PostTransformer extends TransformerBase {
     private readonly FacetExtractor $facetExtractor,
     private readonly ApiClient $apiClient,
     private readonly ConnectionManager $connectionManager,
-  ) {}
+    private readonly FileSystemInterface $fileSystem,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+    LanguageManagerInterface $languageManager,
+  ) {
+    $this->languageManager = $languageManager;
+  }
 
   /**
    * {@inheritdoc}
@@ -104,8 +112,9 @@ class PostTransformer extends TransformerBase {
     $excerpt = $this->getExcerpt($node, 30);
     $url = $node->toUrl('canonical', ['absolute' => TRUE])->toString();
 
-    // Reserve space for the URL and separators.
-    $urlLength = mb_strlen($url);
+    // Reserve space for the URL and separators using grapheme count.
+    $strlen = function_exists('grapheme_strlen') ? 'grapheme_strlen' : 'mb_strlen';
+    $urlLength = $strlen($url);
     $available = self::MAX_GRAPHEMES - $urlLength - 2; // "\n\n" before URL.
 
     if (!empty($excerpt)) {
@@ -115,7 +124,7 @@ class PostTransformer extends TransformerBase {
       $titleAndExcerpt = $title;
     }
 
-    if (mb_strlen($titleAndExcerpt) > $available) {
+    if ($strlen($titleAndExcerpt) > $available) {
       $titleAndExcerpt = $this->truncateText($titleAndExcerpt, $available);
     }
 
@@ -170,7 +179,7 @@ class PostTransformer extends TransformerBase {
       }
 
       $uri = $fileEntity->getFileUri();
-      $realPath = \Drupal::service('file_system')->realpath($uri);
+      $realPath = $this->fileSystem->realpath($uri);
       if (!$realPath || !file_exists($realPath)) {
         continue;
       }
@@ -178,7 +187,6 @@ class PostTransformer extends TransformerBase {
       // Check file size — Bluesky has a 1MB limit.
       $fileSize = filesize($realPath);
       if ($fileSize > 1_000_000) {
-        // Try to find a smaller image style derivative.
         $derivativePath = $this->getSmallDerivative($uri);
         if ($derivativePath !== NULL) {
           $realPath = $derivativePath;
@@ -206,7 +214,7 @@ class PostTransformer extends TransformerBase {
    * Attempts to find a smaller derivative of an image.
    */
   private function getSmallDerivative(string $uri): ?string {
-    $imageStyleStorage = \Drupal::entityTypeManager()->getStorage('image_style');
+    $imageStyleStorage = $this->entityTypeManager->getStorage('image_style');
     $style = $imageStyleStorage->load('large');
 
     if (!$style) {
@@ -218,7 +226,7 @@ class PostTransformer extends TransformerBase {
       $style->createDerivative($uri, $derivativeUri);
     }
 
-    $realPath = \Drupal::service('file_system')->realpath($derivativeUri);
+    $realPath = $this->fileSystem->realpath($derivativeUri);
     if ($realPath && file_exists($realPath) && filesize($realPath) <= 1_000_000) {
       return $realPath;
     }

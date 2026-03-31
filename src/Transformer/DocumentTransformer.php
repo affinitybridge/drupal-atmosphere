@@ -8,7 +8,9 @@ use Drupal\atmosphere\Service\ApiClient;
 use Drupal\atmosphere\Service\ConnectionManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Path\PathAliasManagerInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -25,6 +27,8 @@ class DocumentTransformer extends TransformerBase {
     private readonly ConfigFactoryInterface $configFactory,
     private readonly PathAliasManagerInterface $pathAliasManager,
     private readonly ModuleHandlerInterface $moduleHandler,
+    private readonly FileSystemInterface $fileSystem,
+    private readonly UrlGeneratorInterface $urlGenerator,
   ) {}
 
   /**
@@ -78,7 +82,7 @@ class DocumentTransformer extends TransformerBase {
       $record['site'] = $publicationUri;
     }
     else {
-      $record['site'] = $GLOBALS['base_url'] . '/';
+      $record['site'] = $this->urlGenerator->generateFromRoute('<front>', [], ['absolute' => TRUE]);
     }
 
     // Relative path from the canonical URL.
@@ -170,7 +174,7 @@ class DocumentTransformer extends TransformerBase {
       }
 
       $uri = $fileEntity->getFileUri();
-      $realPath = \Drupal::service('file_system')->realpath($uri);
+      $realPath = $this->fileSystem->realpath($uri);
       if (!$realPath || !file_exists($realPath)) {
         continue;
       }

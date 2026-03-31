@@ -48,6 +48,7 @@ atmosphere.backfill.count:
     _controller: '\Drupal\atmosphere\Controller\BackfillController::count'
   requirements:
     _permission: 'administer atmosphere'
+    _csrf_token: 'TRUE'
 
 atmosphere.backfill.batch:
   path: '/admin/config/services/atmosphere/backfill/batch'
@@ -55,4 +56,5 @@ atmosphere.backfill.batch:
     _controller: '\Drupal\atmosphere\Controller\BackfillController::batch'
   requirements:
     _permission: 'administer atmosphere'
+    _csrf_token: 'TRUE'
   methods: [POST]

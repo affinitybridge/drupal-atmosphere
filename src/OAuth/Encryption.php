@@ -14,10 +14,6 @@ use Drupal\Core\Site\Settings;
  */
 class Encryption {
 
-  public function __construct(
-    private readonly Settings $settings,
-  ) {}
-
   /**
    * Encrypts a plaintext string.
    *
