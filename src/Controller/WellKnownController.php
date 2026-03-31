@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\atmosphere\Controller;
 
 use Drupal\atmosphere\Service\ConnectionManager;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +17,6 @@ class WellKnownController extends ControllerBase {
 
   public function __construct(
     private readonly ConnectionManager $connectionManager,
-    private readonly ConfigFactoryInterface $configFactory,
   ) {}
 
   /**
@@ -27,7 +25,6 @@ class WellKnownController extends ControllerBase {
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('atmosphere.connection_manager'),
-      $container->get('config.factory'),
     );
   }
 
@@ -55,7 +52,7 @@ class WellKnownController extends ControllerBase {
    * Returns the publication AT-URI as plain text.
    */
   public function publication(): Response {
-    $uri = $this->configFactory->get('atmosphere.settings')->get('publication_uri');
+    $uri = $this->config('atmosphere.settings')->get('publication_uri');
 
     if (empty($uri)) {
       throw new NotFoundHttpException();

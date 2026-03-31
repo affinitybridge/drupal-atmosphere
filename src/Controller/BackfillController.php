@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Drupal\atmosphere\Controller;
 
 use Drupal\atmosphere\Service\Publisher;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,8 +20,6 @@ class BackfillController extends ControllerBase {
 
   public function __construct(
     private readonly Publisher $publisher,
-    private readonly EntityTypeManagerInterface $entityTypeManager,
-    private readonly ConfigFactoryInterface $configFactory,
   ) {}
 
   /**
@@ -32,8 +28,6 @@ class BackfillController extends ControllerBase {
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('atmosphere.publisher'),
-      $container->get('entity_type.manager'),
-      $container->get('config.factory'),
     );
   }
 
@@ -41,13 +35,13 @@ class BackfillController extends ControllerBase {
    * Returns a count of unsynced published nodes.
    */
   public function count(): JsonResponse {
-    $syncableTypes = $this->configFactory->get('atmosphere.settings')->get('syncable_node_types') ?? [];
+    $syncableTypes = $this->config('atmosphere.settings')->get('syncable_node_types') ?? [];
 
     if (empty($syncableTypes)) {
       return new JsonResponse(['count' => 0, 'nids' => []]);
     }
 
-    $query = $this->entityTypeManager->getStorage('node')->getQuery()
+    $query = $this->entityTypeManager()->getStorage('node')->getQuery()
       ->accessCheck(FALSE)
       ->condition('type', $syncableTypes, 'IN')
       ->condition('status', NodeInterface::PUBLISHED)
@@ -58,7 +52,7 @@ class BackfillController extends ControllerBase {
     $nids = $query->execute();
 
     // Get total count.
-    $countQuery = $this->entityTypeManager->getStorage('node')->getQuery()
+    $countQuery = $this->entityTypeManager()->getStorage('node')->getQuery()
       ->accessCheck(FALSE)
       ->condition('type', $syncableTypes, 'IN')
       ->condition('status', NodeInterface::PUBLISHED)
@@ -86,7 +80,7 @@ class BackfillController extends ControllerBase {
     }
 
     $results = [];
-    $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
+    $nodes = $this->entityTypeManager()->getStorage('node')->loadMultiple($nids);
 
     foreach ($nodes as $node) {
       if (!$node instanceof NodeInterface || !$node->isPublished()) {
