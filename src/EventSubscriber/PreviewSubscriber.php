@@ -66,7 +66,7 @@ class PreviewSubscriber implements EventSubscriberInterface {
 
     // Check if this node type is syncable.
     $syncableTypes = $this->configFactory->get('atmosphere.settings')->get('syncable_node_types') ?? [];
-    if (!in_array($node->bundle(), $syncableTypes, TRUE)) {
+    if (!in_array($node->bundle(), $syncableTypes, true)) {
       return;
     }
 

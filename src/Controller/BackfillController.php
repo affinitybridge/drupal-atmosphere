@@ -33,6 +33,9 @@ class BackfillController extends ControllerBase {
 
   /**
    * Returns a count of unsynced published nodes.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   JSON with 'count', 'nids', and 'batch_size' keys.
    */
   public function count(): JsonResponse {
     $syncableTypes = $this->config('atmosphere.settings')->get('syncable_node_types') ?? [];
@@ -42,7 +45,7 @@ class BackfillController extends ControllerBase {
     }
 
     $query = $this->entityTypeManager()->getStorage('node')->getQuery()
-      ->accessCheck(FALSE)
+      ->accessCheck(false)
       ->condition('type', $syncableTypes, 'IN')
       ->condition('status', NodeInterface::PUBLISHED)
       ->notExists('atmosphere_doc_uri')
@@ -53,7 +56,7 @@ class BackfillController extends ControllerBase {
 
     // Get total count.
     $countQuery = $this->entityTypeManager()->getStorage('node')->getQuery()
-      ->accessCheck(FALSE)
+      ->accessCheck(false)
       ->condition('type', $syncableTypes, 'IN')
       ->condition('status', NodeInterface::PUBLISHED)
       ->notExists('atmosphere_doc_uri')
@@ -70,9 +73,16 @@ class BackfillController extends ControllerBase {
 
   /**
    * Processes a batch of nodes for backfill.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request, with a JSON body containing a 'nids' array.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   JSON with a 'results' array, each entry having 'nid', 'status', and
+   *   optionally 'message'.
    */
   public function batch(Request $request): JsonResponse {
-    $content = json_decode($request->getContent(), TRUE);
+    $content = json_decode($request->getContent(), true);
     $nids = $content['nids'] ?? [];
 
     if (empty($nids) || !is_array($nids)) {

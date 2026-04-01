@@ -148,7 +148,7 @@ abstract class TransformerBase implements TransformerInterface {
 
     // Cut at last space to avoid breaking words.
     $lastSpace = $strrpos($truncated, ' ');
-    if ($lastSpace !== FALSE && $lastSpace > ($limit - $markerLen) / 2) {
+    if ($lastSpace !== false && $lastSpace > ($limit - $markerLen) / 2) {
       $truncated = $substr($truncated, 0, $lastSpace);
     }
 

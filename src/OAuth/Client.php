@@ -30,23 +30,29 @@ class Client {
 
   /**
    * Returns the OAuth client_id (the client metadata URL).
+   *
+   * @return string
+   *   The absolute URL of the client metadata endpoint.
    */
   public function clientId(): string {
     return $this->urlGenerator->generateFromRoute(
       'atmosphere.client_metadata',
       [],
-      ['absolute' => TRUE],
+      ['absolute' => true],
     );
   }
 
   /**
    * Returns the OAuth redirect URI.
+   *
+   * @return string
+   *   The absolute URL of the OAuth callback route.
    */
   public function redirectUri(): string {
     return $this->urlGenerator->generateFromRoute(
       'atmosphere.oauth_callback',
       [],
-      ['absolute' => TRUE],
+      ['absolute' => true],
     );
   }
 
@@ -185,18 +191,18 @@ class Client {
     }
 
     $refreshToken = $this->encryption->decrypt($connection['refresh_token'] ?? '');
-    if ($refreshToken === FALSE || $refreshToken === '') {
+    if ($refreshToken === false || $refreshToken === '') {
       $this->connectionManager->clearConnection();
       throw new \RuntimeException('Failed to decrypt refresh token. Connection cleared.');
     }
 
     $dpopJwkJson = $this->encryption->decrypt($connection['dpop_jwk'] ?? '');
-    if ($dpopJwkJson === FALSE) {
+    if ($dpopJwkJson === false) {
       $this->connectionManager->clearConnection();
       throw new \RuntimeException('Failed to decrypt DPoP key. Connection cleared.');
     }
 
-    $dpopJwk = json_decode($dpopJwkJson, TRUE);
+    $dpopJwk = json_decode($dpopJwkJson, true);
 
     $body = [
       'grant_type' => 'refresh_token',
@@ -217,6 +223,9 @@ class Client {
   /**
    * Returns a usable access token, refreshing if needed.
    *
+   * @return string
+   *   The decrypted access token.
+   *
    * @throws \RuntimeException
    */
   public function accessToken(): string {
@@ -230,7 +239,7 @@ class Client {
     }
 
     $token = $this->encryption->decrypt($connection['access_token'] ?? '');
-    if ($token === FALSE || $token === '') {
+    if ($token === false || $token === '') {
       throw new \RuntimeException('Failed to decrypt access token.');
     }
 
@@ -240,21 +249,26 @@ class Client {
   /**
    * Returns the decrypted DPoP JWK.
    *
+   * @return array
+   *   The JWK as an associative array.
+   *
    * @throws \RuntimeException
    */
   public function dpopJwk(): array {
     $connection = $this->connectionManager->getConnection();
     $jwkJson = $this->encryption->decrypt($connection['dpop_jwk'] ?? '');
 
-    if ($jwkJson === FALSE) {
+    if ($jwkJson === false) {
       throw new \RuntimeException('Failed to decrypt DPoP key.');
     }
 
-    return json_decode($jwkJson, TRUE);
+    return json_decode($jwkJson, true);
   }
 
   /**
    * Disconnects the AT Protocol account.
+   *
+   * @return void
    */
   public function disconnect(): void {
     $this->connectionManager->clearConnection();
@@ -265,7 +279,7 @@ class Client {
    */
   private function authorizeViaPar(string $parEndpoint, string $authEndpoint, array $dpopJwk, array $params): string {
     $dpopProof = $this->dpop->createProof($dpopJwk, 'POST', $parEndpoint);
-    if ($dpopProof === FALSE) {
+    if ($dpopProof === false) {
       throw new \RuntimeException('Failed to create DPoP proof for PAR.');
     }
 
@@ -277,7 +291,7 @@ class Client {
       if ($nonce) {
         $this->dpop->persistNonce($parEndpoint, $nonce);
         $dpopProof = $this->dpop->createProof($dpopJwk, 'POST', $parEndpoint, $nonce);
-        if ($dpopProof === FALSE) {
+        if ($dpopProof === false) {
           throw new \RuntimeException('Failed to create DPoP proof for PAR retry.');
         }
         $response = $this->sendParRequest($parEndpoint, $params, $dpopProof);
@@ -310,7 +324,7 @@ class Client {
           'DPoP' => $dpopProof,
         ],
         'timeout' => 30,
-        'http_errors' => FALSE,
+        'http_errors' => false,
       ]);
 
       $headers = [];
@@ -320,7 +334,7 @@ class Client {
 
       return [
         'status' => $response->getStatusCode(),
-        'body' => json_decode((string) $response->getBody(), TRUE) ?? [],
+        'body' => json_decode((string) $response->getBody(), true) ?? [],
         'headers' => $headers,
       ];
     }
@@ -349,7 +363,7 @@ class Client {
    */
   private function tokenRequest(string $tokenEndpoint, array $body, array $dpopJwk): array {
     $dpopProof = $this->dpop->createProof($dpopJwk, 'POST', $tokenEndpoint);
-    if ($dpopProof === FALSE) {
+    if ($dpopProof === false) {
       throw new \RuntimeException('Failed to create DPoP proof for token request.');
     }
 
@@ -361,7 +375,7 @@ class Client {
       if ($nonce) {
         $this->dpop->persistNonce($tokenEndpoint, $nonce);
         $dpopProof = $this->dpop->createProof($dpopJwk, 'POST', $tokenEndpoint, $nonce);
-        if ($dpopProof === FALSE) {
+        if ($dpopProof === false) {
           throw new \RuntimeException('Failed to create DPoP proof for token retry.');
         }
         $response = $this->sendTokenRequest($tokenEndpoint, $body, $dpopProof);
@@ -387,7 +401,7 @@ class Client {
           'Content-Type' => 'application/x-www-form-urlencoded',
         ],
         'timeout' => 30,
-        'http_errors' => FALSE,
+        'http_errors' => false,
       ]);
 
       $headers = [];
@@ -397,7 +411,7 @@ class Client {
 
       return [
         'status' => $response->getStatusCode(),
-        'body' => json_decode((string) $response->getBody(), TRUE) ?? [],
+        'body' => json_decode((string) $response->getBody(), true) ?? [],
         'headers' => $headers,
       ];
     }
@@ -427,7 +441,7 @@ class Client {
    * Generates a PKCE code challenge from a verifier (S256).
    */
   private static function generateChallenge(string $verifier): string {
-    return rtrim(strtr(base64_encode(hash('sha256', $verifier, TRUE)), '+/', '-_'), '=');
+    return rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
   }
 
 }

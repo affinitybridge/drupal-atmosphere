@@ -47,11 +47,11 @@ class SiteConfigSubscriber implements EventSubscriberInterface {
     }
 
     // Check if relevant fields changed.
-    $original = $config->getOriginal('name', FALSE);
+    $original = $config->getOriginal('name', false);
     $current = $config->get('name');
     $nameChanged = $original !== $current;
 
-    $originalSlogan = $config->getOriginal('slogan', FALSE);
+    $originalSlogan = $config->getOriginal('slogan', false);
     $currentSlogan = $config->get('slogan');
     $sloganChanged = $originalSlogan !== $currentSlogan;
 

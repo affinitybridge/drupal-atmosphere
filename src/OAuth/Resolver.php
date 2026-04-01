@@ -95,7 +95,7 @@ class Resolver {
         'timeout' => 10,
         'headers' => ['Accept' => 'application/json'],
       ]);
-      $doc = json_decode((string) $response->getBody(), TRUE, 512, JSON_THROW_ON_ERROR);
+      $doc = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 
       if (!is_array($doc)) {
         throw new \RuntimeException("Invalid DID document for {$did}.");
@@ -136,7 +136,7 @@ class Resolver {
         'timeout' => 10,
         'headers' => ['Accept' => 'application/json'],
       ]);
-      $resource = json_decode((string) $response->getBody(), TRUE, 512, JSON_THROW_ON_ERROR);
+      $resource = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
       $issuer = $resource['authorization_servers'][0] ?? NULL;
 
       if (!$issuer) {
@@ -148,7 +148,7 @@ class Resolver {
         'timeout' => 10,
         'headers' => ['Accept' => 'application/json'],
       ]);
-      $metadata = json_decode((string) $response->getBody(), TRUE, 512, JSON_THROW_ON_ERROR);
+      $metadata = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 
       if (!is_array($metadata)) {
         throw new \RuntimeException('Invalid authorization server metadata.');

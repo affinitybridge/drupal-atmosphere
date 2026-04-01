@@ -41,7 +41,7 @@ class TidGenerator {
       self::$clockId = random_int(0, 1023);
     }
 
-    $ts = (int) (microtime(TRUE) * 1_000_000);
+    $ts = (int) (microtime(true) * 1_000_000);
 
     if ($ts <= self::$lastTs) {
       $ts = self::$lastTs + 1;
@@ -59,16 +59,16 @@ class TidGenerator {
    */
   public function isValid(string $tid): bool {
     if (strlen($tid) !== self::LEN) {
-      return FALSE;
+      return false;
     }
 
     for ($i = 0; $i < self::LEN; $i++) {
-      if (strpos(self::CHARSET, $tid[$i]) === FALSE) {
-        return FALSE;
+      if (!str_contains(self::CHARSET, $tid[$i])) {
+        return false;
       }
     }
 
-    return TRUE;
+    return true;
   }
 
   /**

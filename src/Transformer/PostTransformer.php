@@ -110,7 +110,7 @@ class PostTransformer extends TransformerBase {
   private function buildText(NodeInterface $node): string {
     $title = $this->sanitizeText($node->getTitle());
     $excerpt = $this->getExcerpt($node, 30);
-    $url = $node->toUrl('canonical', ['absolute' => TRUE])->toString();
+    $url = $node->toUrl('canonical', ['absolute' => true])->toString();
 
     // Reserve space for the URL and separators using grapheme count.
     $strlen = function_exists('grapheme_strlen') ? 'grapheme_strlen' : 'mb_strlen';
@@ -135,7 +135,7 @@ class PostTransformer extends TransformerBase {
    * Builds an external embed card for the node.
    */
   private function buildEmbed(NodeInterface $node): ?array {
-    $url = $node->toUrl('canonical', ['absolute' => TRUE])->toString();
+    $url = $node->toUrl('canonical', ['absolute' => true])->toString();
     $title = $this->sanitizeText($node->getTitle());
     $description = $this->getExcerpt($node, 30);
 

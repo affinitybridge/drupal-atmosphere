@@ -40,22 +40,22 @@ class ClientMetadataController extends ControllerBase {
       'client_id' => $this->urlGenerator->generateFromRoute(
         'atmosphere.client_metadata',
         [],
-        ['absolute' => TRUE],
+        ['absolute' => true],
       ),
       'client_name' => $siteName . ' (ATmosphere)',
-      'client_uri' => $this->urlGenerator->generateFromRoute('<front>', [], ['absolute' => TRUE]),
+      'client_uri' => $this->urlGenerator->generateFromRoute('<front>', [], ['absolute' => true]),
       'redirect_uris' => [
         $this->urlGenerator->generateFromRoute(
           'atmosphere.oauth_callback',
           [],
-          ['absolute' => TRUE],
+          ['absolute' => true],
         ),
       ],
       'grant_types' => ['authorization_code', 'refresh_token'],
       'response_types' => ['code'],
       'token_endpoint_auth_method' => 'none',
       'scope' => 'atproto transition:generic',
-      'dpop_bound_access_tokens' => TRUE,
+      'dpop_bound_access_tokens' => true,
       'application_type' => 'web',
     ];
 

@@ -31,19 +31,19 @@ class Encryption {
    * Decrypts an encrypted string.
    *
    * @return string|false
-   *   The decrypted plaintext, or FALSE on failure.
+   *   The decrypted plaintext, or false on failure.
    */
   public function decrypt(string $encoded): string|false {
-    $decoded = base64_decode($encoded, TRUE);
+    $decoded = base64_decode($encoded, true);
 
-    if ($decoded === FALSE) {
-      return FALSE;
+    if ($decoded === false) {
+      return false;
     }
 
     $nonceLength = SODIUM_CRYPTO_SECRETBOX_NONCEBYTES;
 
     if (strlen($decoded) < $nonceLength) {
-      return FALSE;
+      return false;
     }
 
     $nonce = substr($decoded, 0, $nonceLength);

@@ -28,7 +28,7 @@ class Publisher {
    * the entity save triggers hook_entity_update() again. This flag breaks
    * that cycle.
    */
-  public static bool $isSaving = FALSE;
+  public static bool $isSaving = false;
 
   public function __construct(
     private readonly ApiClient $apiClient,
@@ -46,6 +46,9 @@ class Publisher {
    *
    * Creates both records atomically via applyWrites, then does a follow-up
    * putRecord to add the bskyPostRef to the document.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to publish.
    *
    * @return array
    *   The applyWrites response.
@@ -106,6 +109,12 @@ class Publisher {
 
   /**
    * Updates existing AT Protocol records for a node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to update. Falls back to publish() if no TIDs exist.
+   *
+   * @return array
+   *   The applyWrites response.
    */
   public function update(NodeInterface $node): array {
     $bskyTid = $node->get('atmosphere_bsky_tid')->value ?? '';
@@ -148,6 +157,12 @@ class Publisher {
 
   /**
    * Deletes AT Protocol records for a node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node whose records should be deleted. Clears AT metadata after delete.
+   *
+   * @return array
+   *   The applyWrites response.
    */
   public function delete(NodeInterface $node): array {
     $bskyTid = $node->get('atmosphere_bsky_tid')->value ?? '';
@@ -156,7 +171,7 @@ class Publisher {
     $result = $this->deleteByTids($bskyTid, $docTid);
 
     // Clear metadata from the node.
-    self::$isSaving = TRUE;
+    self::$isSaving = true;
     try {
       $node->set('atmosphere_bsky_tid', NULL);
       $node->set('atmosphere_bsky_uri', NULL);
@@ -167,7 +182,7 @@ class Publisher {
       $node->save();
     }
     finally {
-      self::$isSaving = FALSE;
+      self::$isSaving = false;
     }
 
     return $result;
@@ -177,6 +192,14 @@ class Publisher {
    * Deletes AT Protocol records by their TIDs.
    *
    * Used when the node entity may already be deleted.
+   *
+   * @param string $bskyTid
+   *   The Bluesky post TID, or empty string to skip.
+   * @param string $docTid
+   *   The document TID, or empty string to skip.
+   *
+   * @return array
+   *   The applyWrites response, or empty array if nothing to delete.
    */
   public function deleteByTids(string $bskyTid, string $docTid): array {
     $writes = [];
@@ -206,6 +229,9 @@ class Publisher {
 
   /**
    * Creates or updates the site.standard.publication record.
+   *
+   * @return array
+   *   The putRecord response.
    */
   public function syncPublication(): array {
     $record = $this->publicationTransformer->transform(new \stdClass());
@@ -247,12 +273,12 @@ class Publisher {
       }
     }
 
-    self::$isSaving = TRUE;
+    self::$isSaving = true;
     try {
       $node->save();
     }
     finally {
-      self::$isSaving = FALSE;
+      self::$isSaving = false;
     }
   }
 

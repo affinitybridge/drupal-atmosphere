@@ -31,7 +31,7 @@ class DPoP {
       'private_key_type' => OPENSSL_KEYTYPE_EC,
     ]);
 
-    if ($key === FALSE) {
+    if ($key === false) {
       throw new \RuntimeException('Failed to generate EC key pair.');
     }
 
@@ -62,7 +62,7 @@ class DPoP {
    *   If provided, binds the proof to this access token via the 'ath' claim.
    *
    * @return string|false
-   *   The compact-serialized JWT, or FALSE on failure.
+   *   The compact-serialized JWT, or false on failure.
    */
   public function createProof(array $jwk, string $method, string $url, ?string $nonce = NULL, ?string $accessToken = NULL): string|false {
     try {
@@ -98,7 +98,7 @@ class DPoP {
       }
 
       if ($accessToken !== NULL) {
-        $payload['ath'] = self::base64url(hash('sha256', $accessToken, TRUE));
+        $payload['ath'] = self::base64url(hash('sha256', $accessToken, true));
       }
 
       $signingKey = new JWK($jwk);
@@ -112,7 +112,7 @@ class DPoP {
       return $serializer->serialize($jws, 0);
     }
     catch (\Throwable) {
-      return FALSE;
+      return false;
     }
   }
 

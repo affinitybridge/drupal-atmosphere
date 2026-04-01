@@ -73,7 +73,7 @@ class PublicationTransformer extends TransformerBase {
 
     $record = [
       '$type' => self::COLLECTION,
-      'url' => $this->urlGenerator->generateFromRoute('<front>', [], ['absolute' => TRUE]),
+      'url' => $this->urlGenerator->generateFromRoute('<front>', [], ['absolute' => true]),
       'name' => $siteConfig->get('name') ?? 'Drupal Site',
     ];
 
@@ -164,7 +164,7 @@ class PublicationTransformer extends TransformerBase {
   /**
    * Converts a hex color string to an RGB array.
    */
-  public static function hexToRgb(string $hex): ?array {
+  private static function hexToRgb(string $hex): ?array {
     $hex = ltrim($hex, '#');
 
     if (strlen($hex) === 3) {

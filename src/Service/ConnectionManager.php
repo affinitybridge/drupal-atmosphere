@@ -29,6 +29,9 @@ class ConnectionManager {
 
   /**
    * Checks if an AT Protocol account is connected.
+   *
+   * @return bool
+   *   true if a DID and access token are present in state.
    */
   public function isConnected(): bool {
     $connection = $this->getConnection();
@@ -37,6 +40,9 @@ class ConnectionManager {
 
   /**
    * Returns the full connection data array.
+   *
+   * @return array
+   *   The raw connection state array stored in Drupal state.
    */
   public function getConnection(): array {
     return $this->state->get(self::STATE_KEY, []);
@@ -44,6 +50,9 @@ class ConnectionManager {
 
   /**
    * Returns the connected DID.
+   *
+   * @return string
+   *   The AT Protocol DID (e.g., did:plc:abc123), or empty string if not set.
    */
   public function getDid(): string {
     return $this->getConnection()['did'] ?? '';
@@ -51,6 +60,9 @@ class ConnectionManager {
 
   /**
    * Returns the connected handle.
+   *
+   * @return string
+   *   The AT Protocol handle (e.g., user.bsky.social), or empty string.
    */
   public function getHandle(): string {
     return $this->getConnection()['handle'] ?? '';
@@ -58,6 +70,9 @@ class ConnectionManager {
 
   /**
    * Returns the PDS endpoint URL.
+   *
+   * @return string
+   *   The base URL of the Personal Data Server, or empty string.
    */
   public function getPdsEndpoint(): string {
     return $this->getConnection()['pds_endpoint'] ?? '';
@@ -65,6 +80,9 @@ class ConnectionManager {
 
   /**
    * Returns the token endpoint URL.
+   *
+   * @return string
+   *   The OAuth token endpoint URL, or empty string.
    */
   public function getTokenEndpoint(): string {
     return $this->getConnection()['token_endpoint'] ?? '';
@@ -72,6 +90,9 @@ class ConnectionManager {
 
   /**
    * Returns the auth server metadata.
+   *
+   * @return array
+   *   The authorization server metadata array, or empty array.
    */
   public function getAuthServer(): array {
     return $this->getConnection()['auth_server'] ?? [];
@@ -79,6 +100,9 @@ class ConnectionManager {
 
   /**
    * Returns the encrypted access token.
+   *
+   * @return string
+   *   The encrypted access token string, or empty string.
    */
   public function getAccessToken(): string {
     return $this->getConnection()['access_token'] ?? '';
@@ -86,6 +110,9 @@ class ConnectionManager {
 
   /**
    * Returns the encrypted refresh token.
+   *
+   * @return string
+   *   The encrypted refresh token string, or empty string.
    */
   public function getRefreshToken(): string {
     return $this->getConnection()['refresh_token'] ?? '';
@@ -93,6 +120,9 @@ class ConnectionManager {
 
   /**
    * Returns the encrypted DPoP JWK.
+   *
+   * @return string
+   *   The encrypted DPoP JSON Web Key string, or empty string.
    */
   public function getDpopJwk(): string {
     return $this->getConnection()['dpop_jwk'] ?? '';
@@ -100,6 +130,9 @@ class ConnectionManager {
 
   /**
    * Returns the token expiration timestamp.
+   *
+   * @return int
+   *   Unix timestamp when the access token expires, or 0 if unknown.
    */
   public function getExpiresAt(): int {
     return (int) ($this->getConnection()['expires_at'] ?? 0);

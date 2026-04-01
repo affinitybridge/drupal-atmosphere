@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\atmosphere\Transformer;
 
+use Drupal\atmosphere\ContentParser\ContentParserInterface;
 use Drupal\atmosphere\Service\ApiClient;
 use Drupal\atmosphere\Service\ConnectionManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -82,7 +83,7 @@ class DocumentTransformer extends TransformerBase {
       $record['site'] = $publicationUri;
     }
     else {
-      $record['site'] = $this->urlGenerator->generateFromRoute('<front>', [], ['absolute' => TRUE]);
+      $record['site'] = $this->urlGenerator->generateFromRoute('<front>', [], ['absolute' => true]);
     }
 
     // Relative path from the canonical URL.
@@ -233,7 +234,7 @@ class DocumentTransformer extends TransformerBase {
     // Allow modules to provide a content parser.
     $parsers = $this->moduleHandler->invokeAll('atmosphere_content_parser');
     foreach ($parsers as $parser) {
-      if ($parser instanceof \Drupal\atmosphere\ContentParser\ContentParserInterface) {
+      if ($parser instanceof ContentParserInterface) {
         $result = $parser->parse($value, $node);
         if (!empty($result)) {
           return $result;

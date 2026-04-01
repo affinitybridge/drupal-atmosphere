@@ -24,13 +24,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SettingsForm extends ConfigFormBase {
 
   public function __construct(
-    $config_factory,
+    $configFactory,
     private readonly Client $oauthClient,
     private readonly ConnectionManager $connectionManager,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly CsrfTokenGenerator $csrfTokenGenerator,
   ) {
-    parent::__construct($config_factory);
+    parent::__construct($configFactory);
   }
 
   /**
@@ -84,7 +84,7 @@ class SettingsForm extends ConfigFormBase {
     $form['connection'] = [
       '#type' => 'details',
       '#title' => $this->t('Connection'),
-      '#open' => TRUE,
+      '#open' => true,
     ];
 
     $form['connection']['info'] = [
@@ -107,7 +107,7 @@ class SettingsForm extends ConfigFormBase {
     $form['publishing'] = [
       '#type' => 'details',
       '#title' => $this->t('Publishing'),
-      '#open' => TRUE,
+      '#open' => true,
     ];
 
     $form['publishing']['auto_publish'] = [
@@ -136,7 +136,7 @@ class SettingsForm extends ConfigFormBase {
     $form['backfill'] = [
       '#type' => 'details',
       '#title' => $this->t('Backfill'),
-      '#open' => FALSE,
+      '#open' => false,
     ];
 
     $form['backfill']['start_backfill'] = [
@@ -167,14 +167,14 @@ class SettingsForm extends ConfigFormBase {
     $form['connect'] = [
       '#type' => 'details',
       '#title' => $this->t('Connect to AT Protocol'),
-      '#open' => TRUE,
+      '#open' => true,
     ];
 
     $form['connect']['handle'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Bluesky Handle'),
       '#description' => $this->t('Enter your AT Protocol handle (e.g., yourname.bsky.social or your-domain.com).'),
-      '#required' => FALSE,
+      '#required' => false,
       '#placeholder' => 'yourname.bsky.social',
     ];
 

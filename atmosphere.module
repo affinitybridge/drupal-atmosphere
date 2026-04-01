@@ -35,10 +35,10 @@ function atmosphere_entity_base_field_info(EntityTypeInterface $entity_type): ar
       $fields[$field_name] = BaseFieldDefinition::create('string')
         ->setLabel(t('ATmosphere: @label', ['@label' => $label]))
         ->setDescription(t('AT Protocol metadata managed by the ATmosphere module.'))
-        ->setRevisionable(FALSE)
-        ->setTranslatable(FALSE)
-        ->setDisplayConfigurable('form', FALSE)
-        ->setDisplayConfigurable('view', FALSE);
+        ->setRevisionable(false)
+        ->setTranslatable(false)
+        ->setDisplayConfigurable('form', false)
+        ->setDisplayConfigurable('view', false);
     }
   }
 
@@ -69,7 +69,7 @@ function atmosphere_entity_insert(EntityInterface $entity): void {
   }
 
   $syncable_types = $config->get('syncable_node_types') ?? [];
-  if (!in_array($entity->bundle(), $syncable_types, TRUE)) {
+  if (!in_array($entity->bundle(), $syncable_types, true)) {
     return;
   }
 
@@ -102,7 +102,7 @@ function atmosphere_entity_update(EntityInterface $entity): void {
   }
 
   $syncable_types = $config->get('syncable_node_types') ?? [];
-  if (!in_array($entity->bundle(), $syncable_types, TRUE)) {
+  if (!in_array($entity->bundle(), $syncable_types, true)) {
     return;
   }
 
@@ -167,7 +167,7 @@ function atmosphere_form_node_form_alter(array &$form, FormStateInterface $form_
   $config = \Drupal::config('atmosphere.settings');
   $syncable_types = $config->get('syncable_node_types') ?? [];
 
-  if (!in_array($node->bundle(), $syncable_types, TRUE)) {
+  if (!in_array($node->bundle(), $syncable_types, true)) {
     return;
   }
 
@@ -184,7 +184,7 @@ function atmosphere_form_node_form_alter(array &$form, FormStateInterface $form_
     '#title' => t('ATmosphere'),
     '#group' => 'advanced',
     '#weight' => 100,
-    '#open' => FALSE,
+    '#open' => false,
   ];
 
   if ($doc_uri) {

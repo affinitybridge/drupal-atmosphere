@@ -54,7 +54,7 @@ class ApiClient {
     $dpopJwk = $this->oauthClient->dpopJwk();
 
     $dpopProof = $this->dpop->createProof($dpopJwk, $method, $url, $nonce, $accessToken);
-    if ($dpopProof === FALSE) {
+    if ($dpopProof === false) {
       throw new \RuntimeException('Failed to create DPoP proof.');
     }
 
@@ -66,7 +66,7 @@ class ApiClient {
     ]);
 
     $requestOptions['timeout'] = $options['timeout'] ?? 30;
-    $requestOptions['http_errors'] = FALSE;
+    $requestOptions['http_errors'] = false;
 
     try {
       $response = $this->httpClient->request($method, $url, $requestOptions);
@@ -76,7 +76,7 @@ class ApiClient {
     }
 
     $statusCode = $response->getStatusCode();
-    $body = json_decode((string) $response->getBody(), TRUE) ?? [];
+    $body = json_decode((string) $response->getBody(), true) ?? [];
 
     // Handle DPoP nonce retry (once). Pass original $options (without auth
     // headers) so the retry builds fresh DPoP proof and Authorization.
@@ -105,6 +105,14 @@ class ApiClient {
 
   /**
    * Sends a GET request.
+   *
+   * @param string $endpoint
+   *   The XRPC endpoint path.
+   * @param array $params
+   *   Optional query parameters.
+   *
+   * @return array
+   *   Decoded JSON response body.
    */
   public function get(string $endpoint, array $params = []): array {
     $options = [];
@@ -117,6 +125,14 @@ class ApiClient {
 
   /**
    * Sends a POST request with a JSON body.
+   *
+   * @param string $endpoint
+   *   The XRPC endpoint path.
+   * @param array $body
+   *   The request body, encoded as JSON.
+   *
+   * @return array
+   *   Decoded JSON response body.
    */
   public function post(string $endpoint, array $body = []): array {
     return $this->request('POST', $endpoint, [
@@ -129,10 +145,20 @@ class ApiClient {
 
   /**
    * Uploads a blob (file) to the PDS.
+   *
+   * @param string $filePath
+   *   Absolute path to the file to upload.
+   * @param string $mimeType
+   *   MIME type of the file.
+   *
+   * @return array
+   *   The uploadBlob response including the blob reference.
+   *
+   * @throws \RuntimeException
    */
   public function uploadBlob(string $filePath, string $mimeType): array {
     $contents = file_get_contents($filePath);
-    if ($contents === FALSE) {
+    if ($contents === false) {
       throw new \RuntimeException("Failed to read file: {$filePath}");
     }
 
@@ -147,6 +173,12 @@ class ApiClient {
 
   /**
    * Executes atomic batch writes.
+   *
+   * @param array $writes
+   *   Array of write operations (create, update, or delete descriptors).
+   *
+   * @return array
+   *   The applyWrites response including result CIDs.
    */
   public function applyWrites(array $writes): array {
     return $this->post('/xrpc/com.atproto.repo.applyWrites', [
@@ -157,6 +189,14 @@ class ApiClient {
 
   /**
    * Retrieves a single record from the PDS.
+   *
+   * @param string $collection
+   *   The NSID collection name (e.g., app.bsky.feed.post).
+   * @param string $rkey
+   *   The record key (TID).
+   *
+   * @return array
+   *   The record data.
    */
   public function getRecord(string $collection, string $rkey): array {
     return $this->get('/xrpc/com.atproto.repo.getRecord', [
@@ -168,6 +208,16 @@ class ApiClient {
 
   /**
    * Lists records in a collection.
+   *
+   * @param string $collection
+   *   The NSID collection name.
+   * @param int $limit
+   *   Maximum number of records to return.
+   * @param string|null $cursor
+   *   Pagination cursor from a previous response.
+   *
+   * @return array
+   *   The listRecords response including records and optional cursor.
    */
   public function listRecords(string $collection, int $limit = 50, ?string $cursor = NULL): array {
     $params = [
@@ -185,6 +235,16 @@ class ApiClient {
 
   /**
    * Puts (creates or updates) a single record.
+   *
+   * @param string $collection
+   *   The NSID collection name.
+   * @param string $rkey
+   *   The record key (TID).
+   * @param array $record
+   *   The record data to write.
+   *
+   * @return array
+   *   The putRecord response including the resulting CID.
    */
   public function putRecord(string $collection, string $rkey, array $record): array {
     return $this->post('/xrpc/com.atproto.repo.putRecord', [

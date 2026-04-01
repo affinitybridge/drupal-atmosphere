@@ -47,7 +47,7 @@ class FacetExtractor {
 
     foreach ($urls as $url) {
       $pos = strpos($text, $url);
-      if ($pos !== FALSE) {
+      if ($pos !== false) {
         $byteStart = strlen(substr($text, 0, $pos));
         $byteEnd = $byteStart + strlen($url);
 

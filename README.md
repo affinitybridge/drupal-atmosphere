@@ -96,6 +96,55 @@ To publish existing content that was created before ATmosphere was installed:
 2. Click the **Backfill** button
 3. The module will batch-process all published nodes of your configured content types that haven't been synced yet
 
+## Debugging
+
+### Record preview
+
+Append `?atproto` to any published node URL to inspect the AT Protocol JSON that would be sent to your PDS:
+
+```
+https://yoursite.com/node/42?atproto
+```
+
+Requires the **Preview AT Protocol records** permission and an active connection. Only works for node types in your configured syncable list.
+
+The response shows the `site.standard.document` record as it would be written. Note that the preview renders the document transformer only — the Bluesky post transformer is not included.
+
+### Logging
+
+All publish/update/delete operations are logged to the `atmosphere` channel. View them at **Administration > Reports > Recent log messages** (filter by type `atmosphere`), or via Drush:
+
+```bash
+drush watchdog:show --type=atmosphere
+```
+
+Queue failures are logged as errors and the item is requeued for retry.
+
+### Manual queue processing
+
+Process queues immediately without waiting for cron:
+
+```bash
+drush queue:run atmosphere_publish
+drush queue:run atmosphere_update
+drush queue:run atmosphere_delete
+drush queue:run atmosphere_sync_publication
+```
+
+### Token state inspection
+
+The connection state (DID, handle, PDS, token expiry) is stored in Drupal's State API under the key `atmosphere.connection`. You can inspect it with:
+
+```bash
+drush php-eval "print_r(\Drupal::state()->get('atmosphere.connection'));"
+```
+
+Tokens are encrypted — you'll see ciphertext, not raw token values.
+
+## Source
+
+Source repository: [affinitybridge/drupal-atmosphere](https://github.com/affinitybridge/drupal-atmosphere)
+
 ## License
 
 GPL-2.0-or-later
