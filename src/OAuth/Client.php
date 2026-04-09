@@ -6,6 +6,7 @@ namespace Drupal\atmosphere\OAuth;
 
 use Drupal\atmosphere\Service\ConnectionManager;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Drupal\Core\Site\Settings;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -31,10 +32,16 @@ class Client {
   /**
    * Returns the OAuth client_id (the client metadata URL).
    *
+   * In loopback dev mode, returns 'http://localhost' per AT Protocol spec,
+   * which tells the auth server to skip fetching client metadata.
+   *
    * @return string
    *   The absolute URL of the client metadata endpoint.
    */
   public function clientId(): string {
+    if ($this->loopbackPort()) {
+      return 'http://localhost';
+    }
     return $this->urlGenerator->generateFromRoute(
       'atmosphere.client_metadata',
       [],
@@ -45,15 +52,29 @@ class Client {
   /**
    * Returns the OAuth redirect URI.
    *
+   * In loopback dev mode, returns an http://127.0.0.1:{port} URI per
+   * the AT Protocol localhost client spec.
+   *
    * @return string
    *   The absolute URL of the OAuth callback route.
    */
   public function redirectUri(): string {
+    if ($port = $this->loopbackPort()) {
+      return 'http://127.0.0.1:' . $port;
+    }
     return $this->urlGenerator->generateFromRoute(
       'atmosphere.oauth_callback',
       [],
       ['absolute' => true],
     );
+  }
+
+  /**
+   * Returns the loopback port if dev mode is enabled, or NULL.
+   */
+  private function loopbackPort(): ?int {
+    $port = Settings::get('atmosphere_loopback_port');
+    return $port ? (int) $port : NULL;
   }
 
   /**
@@ -89,14 +110,26 @@ class Client {
     $this->connectionManager->setOAuthTransient('atmosphere_oauth_dpop_jwk', $dpopJwk);
     $this->connectionManager->setOAuthTransient('atmosphere_oauth_resolved', $resolved);
 
+    // In loopback mode, store the real settings URL so the loopback callback
+    // can redirect back to the correct domain after token exchange.
+    if ($this->loopbackPort()) {
+      $this->connectionManager->setOAuthTransient('atmosphere_oauth_return_url',
+        $this->urlGenerator->generateFromRoute('atmosphere.settings', [], ['absolute' => TRUE])
+      );
+    }
+
     $authServer = $resolved['auth_server'];
 
     // Common authorization parameters.
+    // Loopback clients only support the 'atproto' scope; the auth server
+    // rejects 'transition:generic' because it isn't declared in client metadata
+    // (and loopback clients have no fetchable metadata).
+    $scope = $this->loopbackPort() ? 'atproto' : self::SCOPES;
     $params = [
       'response_type' => 'code',
       'client_id' => $this->clientId(),
       'redirect_uri' => $this->redirectUri(),
-      'scope' => self::SCOPES,
+      'scope' => $scope,
       'state' => $state,
       'code_challenge' => $challenge,
       'code_challenge_method' => 'S256',

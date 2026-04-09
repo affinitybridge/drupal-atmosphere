@@ -68,6 +68,14 @@ class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
+    // Show errors passed via query parameter from loopback OAuth callback.
+    $atmosphereError = $this->getRequest()->query->get('atmosphere_error');
+    if ($atmosphereError) {
+      $this->messenger()->addError($this->t('Authorization failed: @error', [
+        '@error' => $atmosphereError,
+      ]));
+    }
+
     $config = $this->config('atmosphere.settings');
 
     if ($this->connectionManager->isConnected()) {
