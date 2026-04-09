@@ -25,6 +25,8 @@ When you publish a node in Drupal, ATmosphere creates both a Bluesky post (`app.
 
 ## Installation
 
+This module is not yet published on drupal.org. Install from GitHub:
+
 ```bash
 composer require drupal/atmosphere
 drush en atmosphere
@@ -36,6 +38,21 @@ drush en atmosphere
 2. Enter your AT Protocol handle (e.g. `yourname.bsky.social` or a custom domain handle)
 3. Complete the OAuth authorization flow - you'll be redirected to your authorization server to grant access
 4. Configure which content types to publish and whether to auto-publish on node creation
+
+### Local Development (DDEV)
+
+The OAuth flow requires the Bluesky authorization server to fetch your site's client metadata endpoint. On a local-only domain like `*.ddev.site`, this will fail because Bluesky's servers can't reach it.
+
+**Solution: use a tunnel to expose your local site with a public URL.**
+
+1. Install cloudflared: `brew install cloudflared` (macOS) or see [cloudflare docs](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
+2. Start the tunnel: `ddev share --provider cloudflared`
+3. Copy the tunnel URL (e.g. `https://random-words.trycloudflare.com`)
+4. Generate a login link: `ddev drush uli`
+5. Open the login link in your browser, replacing `https://yourproject.ddev.site` with the tunnel URL
+6. Navigate to `/admin/config/services/atmosphere` and complete the OAuth flow
+
+The tunnel URL changes each time you restart it. You only need the tunnel running during the initial OAuth connection — once connected, normal `*.ddev.site` access works for publishing and configuration.
 
 ### Domain Handle Verification
 

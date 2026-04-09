@@ -208,7 +208,7 @@ class DocumentTransformer extends TransformerBase {
     }
 
     // Render the body through Drupal's text filters.
-    $value = $body->processed ?? $body->value ?? '';
+    $value = (string) ($body->processed ?? $body->value ?? '');
 
     return $this->sanitizeText($value);
   }

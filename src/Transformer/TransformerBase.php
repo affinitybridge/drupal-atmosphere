@@ -101,12 +101,12 @@ abstract class TransformerBase implements TransformerInterface {
       return '';
     }
 
-    $summary = $body->summary ?? '';
+    $summary = (string) ($body->summary ?? '');
     if (!empty($summary)) {
       return $this->sanitizeText($summary);
     }
 
-    $text = $this->sanitizeText($body->value ?? '');
+    $text = $this->sanitizeText((string) ($body->value ?? ''));
     $words = preg_split('/\s+/', $text, $wordLimit + 1);
 
     if (count($words) > $wordLimit) {

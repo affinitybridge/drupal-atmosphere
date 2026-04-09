@@ -99,6 +99,16 @@ services:
     tags:
       - { name: event_subscriber }
 
+  atmosphere.loopback_oauth_subscriber:
+    class: Drupal\atmosphere\EventSubscriber\LoopbackOAuthSubscriber
+    arguments:
+      - '@atmosphere.oauth_client'
+      - '@atmosphere.publisher'
+      - '@atmosphere.connection_manager'
+      - '@logger.channel.atmosphere'
+    tags:
+      - { name: event_subscriber }
+
   atmosphere.preview_subscriber:
     class: Drupal\atmosphere\EventSubscriber\PreviewSubscriber
     arguments:

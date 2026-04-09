@@ -7,6 +7,8 @@ namespace Drupal\atmosphere\Form;
 use Drupal\atmosphere\OAuth\Client;
 use Drupal\atmosphere\Service\ConnectionManager;
 use Drupal\Core\Access\CsrfTokenGenerator;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -24,13 +26,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SettingsForm extends ConfigFormBase {
 
   public function __construct(
-    $configFactory,
+    ConfigFactoryInterface $configFactory,
+    TypedConfigManagerInterface $typedConfigManager,
     private readonly Client $oauthClient,
     private readonly ConnectionManager $connectionManager,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly CsrfTokenGenerator $csrfTokenGenerator,
   ) {
-    parent::__construct($configFactory);
+    parent::__construct($configFactory, $typedConfigManager);
   }
 
   /**
@@ -39,6 +42,7 @@ class SettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('atmosphere.oauth_client'),
       $container->get('atmosphere.connection_manager'),
       $container->get('entity_type.manager'),
@@ -64,6 +68,14 @@ class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
+    // Show errors passed via query parameter from loopback OAuth callback.
+    $atmosphereError = $this->getRequest()->query->get('atmosphere_error');
+    if ($atmosphereError) {
+      $this->messenger()->addError($this->t('Authorization failed: @error', [
+        '@error' => $atmosphereError,
+      ]));
+    }
+
     $config = $this->config('atmosphere.settings');
 
     if ($this->connectionManager->isConnected()) {
